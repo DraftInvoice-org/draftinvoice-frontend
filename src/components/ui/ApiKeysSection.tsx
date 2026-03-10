@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { apiKeyService, type ApiKey } from '../../services/apiKeyService';
 import { Plus, Trash2, Copy, Check, ShieldAlert } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/uiStore';
 
 export const ApiKeysSection = () => {
     const user = useAuthStore((state) => state.user);
+    const showDialog = useUIStore((state) => state.showDialog);
     const isPro = user?.plan === 'pro';
 
     const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -43,23 +45,41 @@ export const ApiKeysSection = () => {
             setNewKeyName('');
         } catch (error) {
             console.error(error);
-            alert('Failed to generate key');
+            showDialog({
+                type: 'error',
+                title: 'Generation Failed',
+                message: 'Failed to generate API key'
+            });
         } finally {
             setGenerating(false);
         }
     };
 
     const handleRevoke = async (id: string) => {
-        if (!globalThis.window.confirm('Are you sure you want to revoke this key? Any integrations using it will immediately break.')) {
-            return;
-        }
-        try {
-            await apiKeyService.revokeKey(id);
-            setKeys((prev) => prev.filter(k => k.id !== id));
-        } catch (error) {
-            console.error(error);
-            alert('Failed to revoke key');
-        }
+        showDialog({
+            type: 'confirm',
+            title: 'Revoke API Key',
+            message: 'Are you sure you want to revoke this key? Any integrations using it will immediately break.',
+            confirmText: 'Revoke Key',
+            onConfirm: async () => {
+                try {
+                    await apiKeyService.revokeKey(id);
+                    setKeys((prev) => prev.filter(k => k.id !== id));
+                    showDialog({
+                        type: 'success',
+                        title: 'Key Revoked',
+                        message: 'The API key has been successfully revoked.'
+                    });
+                } catch (error) {
+                    console.error(error);
+                    showDialog({
+                        type: 'error',
+                        title: 'Revocation Failed',
+                        message: 'Failed to revoke API key'
+                    });
+                }
+            }
+        });
     };
 
     const handleCopy = () => {

@@ -24,6 +24,7 @@ import { ResetPassword } from 'pages/login/ResetPassword';
 import { BusinessVerification } from 'pages/settings/KYC';
 import { UpgradeCallback } from 'pages/upgrade/UpgradeCallback';
 import { fetchWithAuth } from 'services/apiService';
+import { Dialog } from 'components/ui/Dialog';
 
 const AppInit = ({ children }: { children: React.ReactNode }) => {
   const { token, logout } = useAuthStore();
@@ -70,6 +71,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppInit>
+        <Dialog />
         <Routes>
           {/* Routes exclusively with Navbar (Public Pages) */}
           <Route element={<MainLayout />}>

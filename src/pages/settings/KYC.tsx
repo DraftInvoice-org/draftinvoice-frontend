@@ -4,6 +4,7 @@ import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Button } from '../../components/ui/Button';
 import { Building2, FileText, MapPin, CheckCircle2, Clock, AlertCircle, ShieldCheck } from 'lucide-react';
+import { useUIStore } from '../../store/uiStore';
 
 interface KycStatus {
     id: string;
@@ -46,6 +47,8 @@ export const BusinessVerification = () => {
         }
     };
 
+    const showDialog = useUIStore((state) => state.showDialog);
+
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setError('');
@@ -62,7 +65,11 @@ export const BusinessVerification = () => {
                 })
             });
             setKyc(result);
-            alert('Verification request submitted successfully!');
+            showDialog({
+                type: 'success',
+                title: 'Verification Submitted',
+                message: 'Verification request submitted successfully!'
+            });
         } catch (err: any) {
             setError(err.message || 'Failed to submit verification');
         } finally {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Server, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
 import { fetchWithAuth } from '../../services/apiService';
 import { useCanAccess } from '../../hooks/useCanAccess';
+import { useUIStore } from '../../store/uiStore';
 import { ProUpgradePrompt } from '../ui/ProUpgradePrompt';
 
 interface SmtpForm {
@@ -63,17 +64,26 @@ export const SmtpSettingsSection = () => {
         }
     };
 
+    const showDialog = useUIStore((state) => state.showDialog);
+
     const handleDelete = async () => {
-        if (!globalThis.window.confirm('Remove your custom SMTP configuration? The platform default will be used.')) return;
-        try {
-            await fetchWithAuth('/smtp', { method: 'DELETE' });
-            setHasConfig(false);
-            setForm(EMPTY_FORM);
-            setStatus('idle');
-            setMsg('');
-        } catch {
-            setMsg('Failed to remove SMTP settings.');
-        }
+        showDialog({
+            type: 'confirm',
+            title: 'Remove SMTP',
+            message: 'Remove your custom SMTP configuration? The platform default will be used.',
+            confirmText: 'Remove',
+            onConfirm: async () => {
+                try {
+                    await fetchWithAuth('/smtp', { method: 'DELETE' });
+                    setHasConfig(false);
+                    setForm(EMPTY_FORM);
+                    setStatus('idle');
+                    setMsg('');
+                } catch {
+                    setMsg('Failed to remove SMTP settings.');
+                }
+            }
+        });
     };
 
     if (!canAccess) {

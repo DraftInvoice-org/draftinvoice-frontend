@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Plus, Building2, Mail, Phone, Trash2, Pencil, Search } from 'lucide-react';
 import { clientService } from '../../services/clientService';
 import { useCanAccess } from '../../hooks/useCanAccess';
+import { useUIStore } from '../../store/uiStore';
 import { ProUpgradePrompt } from '../../components/ui/ProUpgradePrompt';
 import { ClientModal } from './ClientModal';
 import type { ClientRecord } from 'types/shared';
@@ -42,10 +43,19 @@ export const ClientsPage = () => {
         setEditing(null);
     };
 
+    const showDialog = useUIStore((state) => state.showDialog);
+
     const handleDelete = async (id: string) => {
-        if (!globalThis.window.confirm('Delete this client? Their invoices will be unlinked but not deleted.')) return;
-        await clientService.delete(id);
-        setClients((prev) => prev.filter((c) => c.id !== id));
+        showDialog({
+            type: 'confirm',
+            title: 'Delete Client',
+            message: 'Delete this client? Their invoices will be unlinked but not deleted.',
+            confirmText: 'Delete Client',
+            onConfirm: async () => {
+                await clientService.delete(id);
+                setClients((prev) => prev.filter((c) => c.id !== id));
+            }
+        });
     };
 
     const openEdit = (client: ClientRecord) => { setEditing(client); setModalOpen(true); };

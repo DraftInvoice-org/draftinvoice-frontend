@@ -7,9 +7,12 @@ import { ApiKeysSection } from '../../components/ui/ApiKeysSection';
 import { fetchWithAuth } from '../../services/apiService';
 
 
+import { useUIStore } from '../../store/uiStore';
+
 export const Settings = () => {
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
+    const showDialog = useUIStore((state) => state.showDialog);
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -27,20 +30,34 @@ export const Settings = () => {
     };
 
     const handleDeleteAccount = async () => {
-        if (!confirm('Are you absolutely sure? All your templates and invoices will be permanently deleted.')) return;
-
-        try {
-            const res = await fetchWithAuth('/users/me', { method: 'DELETE' });
-            if (res.ok) {
-                logout();
-                navigate('/');
-            } else {
-                const err = await res.json();
-                alert(err.error || 'Failed to delete account');
+        showDialog({
+            type: 'confirm',
+            title: 'Delete Account',
+            message: 'Are you absolutely sure? All your templates and invoices will be permanently deleted.',
+            confirmText: 'Delete Everything',
+            onConfirm: async () => {
+                try {
+                    const res = await fetchWithAuth('/users/me', { method: 'DELETE' });
+                    if (res.ok) {
+                        logout();
+                        navigate('/');
+                    } else {
+                        const err = await res.json();
+                        showDialog({
+                            type: 'error',
+                            title: 'Deletion Failed',
+                            message: err.error || 'Failed to delete account'
+                        });
+                    }
+                } catch {
+                    showDialog({
+                        type: 'error',
+                        title: 'Error',
+                        message: 'Something went wrong while deleting your account.'
+                    });
+                }
             }
-        } catch {
-            alert('Something went wrong while deleting your account.');
-        }
+        });
     };
 
     return (
